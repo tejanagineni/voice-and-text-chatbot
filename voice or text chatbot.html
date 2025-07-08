@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Chatbot with Voice</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+        }
+
+        #chat-container {
+            width: 400px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px #ccc;
+        }
+
+        #chat-box {
+            height: 300px;
+            overflow-y: auto;
+            padding: 16px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .message {
+            margin: 8px 0;
+        }
+
+        .user {
+            text-align: right;
+            color: #0078d7;
+        }
+
+        .bot {
+            text-align: left;
+            color: #333;
+        }
+
+        #input-area {
+            display: flex;
+            border-top: 1px solid #eee;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 0 0 0 8px;
+            font-size: 16px;
+        }
+
+        #send-btn,
+        #voice-btn {
+            padding: 10px 16px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #send-btn {
+            background: #0078d7;
+            color: #fff;
+            border-radius: 0 0 8px 0;
+        }
+
+        #send-btn:hover {
+            background: #005fa3;
+        }
+
+        #voice-btn {
+            background: #28a745;
+            color: white;
+            border-radius: 0 0 0 0;
+        }
+
+        #voice-btn:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-box"></div>
+        <div id="input-area">
+            <input type="text" id="user-input" placeholder="Type your message..." autocomplete="off" />
+            <button id="send-btn">Send</button>
+            <button id="voice-btn">🎤</button>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const voiceBtn = document.getElementById('voice-btn');
+
+        function appendMessage(text, sender) {
+            const msg = document.createElement('div');
+            msg.className = 'message ' + sender;
+            msg.textContent = text;
+            chatBox.appendChild(msg);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function botReply(input) {
+            const msg = input.toLowerCase();
+            if (msg.includes('hello') || msg.includes('hi')) {
+                return "Hello! How can I help you?";
+            } else if (msg.includes('name')) {
+                return "I'm your voice-enabled chatbot!";
+            } else if (msg.includes('help')) {
+                return "Sure, ask me anything!";
+            } else {
+                return "Sorry, I didn't hear that. Could you please repeat?";
+            }
+        }
+
+        function speak(text) {
+            const speech = new SpeechSynthesisUtterance(text);
+            speechSynthesis.speak(speech);
+        }
+
+        function sendMessage(text = null) {
+            const inputText = text || userInput.value.trim();
+            if (!inputText) return;
+            appendMessage(inputText, 'user');
+            userInput.value = '';
+            const reply = botReply(inputText);
+            setTimeout(() => {
+                appendMessage(reply, 'bot');
+                speak(reply);
+            }, 500);
+        }
+
+        sendBtn.addEventListener('click', () => sendMessage());
+        userInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // 🎤 Voice Recognition
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.continuous = false;
+
+            voiceBtn.addEventListener('click', () => {
+                recognition.start();
+            });
+
+            recognition.onresult = function (event) {
+                const transcript = event.results[0][0].transcript;
+                sendMessage(transcript);
+            };
+        } else {
+            voiceBtn.disabled = true;
+            voiceBtn.textContent = 'No Mic';
+        }
+    </script>
+</body>
+</html>
